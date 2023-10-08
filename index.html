@@ -125,9 +125,11 @@
     <script>
       <!-- ... (Your HTML and CSS) ... -->
 
+<!-- ... (Ihr HTML und CSS) ... -->
+
 <script>
     const firebaseConfig = {
-        apiKey: "AIzaSyDKr2XnPHA_l-1MxJDEZc0hdA3GdabFCeI",
+       apiKey: "AIzaSyDKr2XnPHA_l-1MxJDEZc0hdA3GdabFCeI",
   authDomain: "chat-8b925.firebaseapp.com",
   projectId: "chat-8b925",
   storageBucket: "chat-8b925.appspot.com",
@@ -149,8 +151,8 @@
             loginContainer.style.display = 'none';
             chatContainer.style.display = 'block';
 
-            // Function to load messages from Firebase and display them
             function loadMessages() {
+                // Daten aus der Firebase-Datenbank abrufen und anzeigen
                 database.ref('messages').on('child_added', snapshot => {
                     const messageData = snapshot.val();
                     const messageElement = document.createElement('div');
@@ -159,16 +161,15 @@
                 });
             }
 
-            // Load messages initially and whenever a new message is added
+            // Nachrichten beim Starten der App laden
             loadMessages();
 
-            // Function to send a message
             function sendMessage() {
                 const messageInput = document.getElementById('message-input');
                 const message = messageInput.value;
 
                 if (message) {
-                    // Send message to Firebase
+                    // Nachricht in Firebase speichern
                     database.ref('messages').push({
                         sender: user.email,
                         message: message
@@ -177,7 +178,7 @@
                 }
             }
 
-            // Event listener for message sending
+            // Event-Listener für das Senden von Nachrichten
             document.getElementById('send-button').addEventListener('click', sendMessage);
         } else {
             loginContainer.style.display = 'block';
@@ -202,15 +203,14 @@
 
         auth.createUserWithEmailAndPassword(email, password)
             .then(() => {
-                // Registration successful
-                console.log('Registration successful!');
+                // Registrierung erfolgreich
+                console.log('Registrierung erfolgreich!');
             })
             .catch(error => {
                 console.error(error.message);
             });
     }
-
-    </script>
+</script>
 </body>
 
 </html>
