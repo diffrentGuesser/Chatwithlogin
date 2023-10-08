@@ -123,83 +123,96 @@
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-auth-compat.js"></script>
     <script>
-        const firebaseConfig = {
-              apiKey: "AIzaSyDKr2XnPHA_l-1MxJDEZc0hdA3GdabFCeI",
-  authDomain: "chat-8b925.firebaseapp.com",
-  projectId: "chat-8b925",
-  storageBucket: "chat-8b925.appspot.com",
-  messagingSenderId: "645929406773",
-  appId: "1:645929406773:web:fa2731c16c965c41043c7c",
-  measurementId: "G-YFSWL08V7F"
-        };
+      <!-- ... (Your HTML and CSS) ... -->
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
+<script>
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
 
-        auth.onAuthStateChanged(user => {
-            const loginContainer = document.querySelector('.login-container');
-            const chatContainer = document.getElementById('chat-container');
-            const chatMessages = document.getElementById('chat-messages');
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
+    const chatMessages = document.getElementById('chat-messages');
 
-            if (user) {
-                loginContainer.style.display = 'none';
-                chatContainer.style.display = 'block';
+    auth.onAuthStateChanged(user => {
+        const loginContainer = document.querySelector('.login-container');
+        const chatContainer = document.getElementById('chat-container');
 
-                // Lade vorhandene Nachrichten aus der Datenbank und zeige sie im Chat an
+        if (user) {
+            loginContainer.style.display = 'none';
+            chatContainer.style.display = 'block';
+
+            // Function to load messages from Firebase and display them
+            function loadMessages() {
                 database.ref('messages').on('child_added', snapshot => {
                     const messageData = snapshot.val();
                     const messageElement = document.createElement('div');
                     messageElement.innerText = `${messageData.sender}: ${messageData.message}`;
                     chatMessages.appendChild(messageElement);
                 });
-            } else {
-                loginContainer.style.display = 'block';
-                chatContainer.style.display = 'none';
             }
-        });
 
-        function sendMessage() {
-            const messageInput = document.getElementById('message-input');
-            const message = messageInput.value;
-            const user = auth.currentUser;
+            // Load messages initially and whenever a new message is added
+            loadMessages();
 
-            if (user && message) {
-                // Sende Nachricht an die Datenbank
-                database.ref('messages').push({
-                    sender: user.email,
-                    message: message
-                });
-                messageInput.value = '';
+            // Function to send a message
+            function sendMessage() {
+                const messageInput = document.getElementById('message-input');
+                const message = messageInput.value;
+
+                if (message) {
+                    // Send message to Firebase
+                    database.ref('messages').push({
+                        sender: user.email,
+                        message: message
+                    });
+                    messageInput.value = '';
+                }
             }
+
+            // Event listener for message sending
+            document.getElementById('send-button').addEventListener('click', sendMessage);
+        } else {
+            loginContainer.style.display = 'block';
+            chatContainer.style.display = 'none';
         }
+    });
 
-        document.querySelector('.login-form').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+    document.querySelector('.login-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
 
-            auth.signInWithEmailAndPassword(email, password)
-                .catch(error => {
-                    console.error(error.message);
-                });
-        });
+        auth.signInWithEmailAndPassword(email, password)
+            .catch(error => {
+                console.error(error.message);
+            });
+    });
 
-        function register() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+    function register() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
 
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(() => {
-                    // Registrierung erfolgreich
-                    console.log('Registrierung erfolgreich!');
-                })
-                .catch(error => {
-                    console.error(error.message);
-                });
-        }
+        auth.createUserWithEmailAndPassword(email, password)
+            .then(() => {
+                // Registration successful
+                console.log('Registration successful!');
+            })
+            .catch(error => {
+                console.error(error.message);
+            });
+    }
+</script>
+</body>
 
-        document.getElementById('send-button').addEventListener('click', sendMessage);
+</html>
+
     </script>
 </body>
 
