@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            width: 300px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .login-form input[type="email"],
+        .login-form input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .login-form input[type="submit"],
+        .login-form button {
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .login-form input[type="submit"]:hover,
+        .login-form button:hover {
+            background-color: #0056b3;
+        }
+
+        .message-input-container {
+            position: relative;
+        }
+
+        #message-input {
+            width: calc(100% - 45px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #send-button {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+
+        #chat-container {
+            display: none;
+        }
+
+        #chat-messages {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form class="login-form" action="#">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required><br>
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required><br>
+
+            <input type="submit" value="Login">
+            <button type="button" onclick="register()">Register</button>
+        </form>
+    </div>
+
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <div class="message-input-container">
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-auth-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+              apiKey: "AIzaSyDKr2XnPHA_l-1MxJDEZc0hdA3GdabFCeI",
+  authDomain: "chat-8b925.firebaseapp.com",
+  projectId: "chat-8b925",
+  storageBucket: "chat-8b925.appspot.com",
+  messagingSenderId: "645929406773",
+  appId: "1:645929406773:web:fa2731c16c965c41043c7c",
+  measurementId: "G-YFSWL08V7F"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        auth.onAuthStateChanged(user => {
+            const loginContainer = document.querySelector('.login-container');
+            const chatContainer = document.getElementById('chat-container');
+            const chatMessages = document.getElementById('chat-messages');
+
+            if (user) {
+                loginContainer.style.display = 'none';
+                chatContainer.style.display = 'block';
+
+                // Lade vorhandene Nachrichten aus der Datenbank und zeige sie im Chat an
+                database.ref('messages').on('child_added', snapshot => {
+                    const messageData = snapshot.val();
+                    const messageElement = document.createElement('div');
+                    messageElement.innerText = `${messageData.sender}: ${messageData.message}`;
+                    chatMessages.appendChild(messageElement);
+                });
+            } else {
+                loginContainer.style.display = 'block';
+                chatContainer.style.display = 'none';
+            }
+        });
+
+        function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value;
+            const user = auth.currentUser;
+
+            if (user && message) {
+                // Sende Nachricht an die Datenbank
+                database.ref('messages').push({
+                    sender: user.email,
+                    message: message
+                });
+                messageInput.value = '';
+            }
+        }
+
+        document.querySelector('.login-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .catch(error => {
+                    console.error(error.message);
+                });
+        });
+
+        function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(() => {
+                    // Registrierung erfolgreich
+                    console.log('Registrierung erfolgreich!');
+                })
+                .catch(error => {
+                    console.error(error.message);
+                });
+        }
+
+        document.getElementById('send-button').addEventListener('click', sendMessage);
+    </script>
+</body>
+
+</html>
