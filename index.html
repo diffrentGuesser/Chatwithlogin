@@ -1,206 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Chat</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .login-container {
-            width: 300px;
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
-        }
-
-        .login-container h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .login-form input[type="email"],
-        .login-form input[type="password"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        .login-form input[type="submit"],
-        .login-form button {
-            width: 100%;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-
-        .login-form input[type="submit"]:hover,
-        .login-form button:hover {
-            background-color: #0056b3;
-        }
-
-        .message-input-container {
-            position: relative;
-        }
-
-        #message-input {
-            width: calc(100% - 45px);
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        #send-button {
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 40px;
-            height: 40px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #send-button:hover {
-            background-color: #0056b3;
-        }
-
-        #chat-container {
-            display: none;
-        }
-
-        #chat-messages {
-            margin-bottom: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wordle</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    #wordle-container {
+      max-width: 400px;
+      margin: 0 auto;
+      text-align: center;
+      margin-top: 50px;
+    }
+    .letter-input {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      text-transform: uppercase;
+      margin: 5px;
+      padding: 5px;
+      text-align: center;
+      border: 1px solid black;
+      box-sizing: border-box;
+    }
+    .letter-input-container {
+      display: inline-block;
+      margin-right: -4px;
+      margin-bottom: -4px;
+      vertical-align: middle;
+    }
+    .row-hidden {
+      display: none;
+    }
+    #submit-button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    .correct {
+      background-color: lightgreen;
+    }
+    .in-word {
+      background-color: yellow;
+    }
+    .incorrect {
+      background-color: white;
+    }
+  </style>
 </head>
-
 <body>
-    <div class="login-container">
-        <h2>Login</h2>
-        <form class="login-form">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required><br>
+  <div id="wordle-container">
+    <h1>Countryle</h1>
+    <p>Guess the 5-letter country name:</p>
+    <div class="row" id="input-row"></div>
+    <button id="submit-button">Submit</button>
+  </div>
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required><br>
-
-            <input type="submit" value="Login">
-            <button type="button" onclick="register()">Register</button>
-        </form>
-    </div>
-
-    <div id="chat-container">
-        <div id="chat-messages"></div>
-        <div class="message-input-container">
-            <input type="text" id="message-input" placeholder="Type your message...">
-            <button id="send-button">Send</button>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-auth-compat.js"></script>
-    <script>
-        const firebaseConfig = {
-           apiKey: "AIzaSyDKr2XnPHA_l-1MxJDEZc0hdA3GdabFCeI",
-  authDomain: "chat-8b925.firebaseapp.com",
-  projectId: "chat-8b925",
-  storageBucket: "chat-8b925.appspot.com",
-  messagingSenderId: "645929406773",
-  appId: "1:645929406773:web:fa2731c16c965c41043c7c",
-  measurementId: "G-YFSWL08V7F"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
-        const chatMessages = document.getElementById('chat-messages');
-
-        auth.onAuthStateChanged(user => {
-            const loginContainer = document.querySelector('.login-container');
-            const chatContainer = document.getElementById('chat-container');
-
-            if (user) {
-                loginContainer.style.display = 'none';
-                chatContainer.style.display = 'block';
-
-                function loadMessages() {
-                    database.ref('messages').on('child_added', snapshot => {
-                        const messageData = snapshot.val();
-                        const messageElement = document.createElement('div');
-                        messageElement.innerText = `${messageData.sender}: ${messageData.message}`;
-                        chatMessages.appendChild(messageElement);
-                    });
-                }
-
-                loadMessages();
-
-                function sendMessage() {
-                    const messageInput = document.getElementById('message-input');
-                    const message = messageInput.value;
-
-                    if (message) {
-                        database.ref('messages').push({
-                            sender: user.email,
-                            message: message
-                        });
-                        messageInput.value = '';
-                    }
-                }
-
-                document.getElementById('send-button').addEventListener('click', sendMessage);
-            } else {
-                loginContainer.style.display = 'block';
-                chatContainer.style.display = 'none';
-            }
-        });
-
-        document.querySelector('.login-form').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            auth.signInWithEmailAndPassword(email, password)
-                .catch(error => {
-                    console.error(error.message);
-                });
-        });
-
-        function register() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(() => {
-                    console.log('Registrierung erfolgreich!');
-                })
-                .catch(error => {
-                    console.error(error.message);
-                });
+  <script>
+    const countries = ["albanien", "andorra", "angola", "antigua", "argentinien", "armenien", "aserbaidschan", "australien", "bahamas", "bahrain", "bangladesch", "barbados", "belarus", "belgien", "belize", "benin", "bhutan", "bolivien", "bosnien", "botswana", "brasilien", "brunei", "bulgarien", "burundi", "chile", "china", "dänemark", "deutschland", "dominica", "ecuador", "elfenbeinküste", "estland", "eswatini", "fidschi", "finnland", "frankreich", "gabun", "gambia", "georgien", "ghana", "grenada", "griechenland", "guatemala", "guinea", "guyana", "haiti", "honduras", "indien", "indonesien", "irak", "iran", "irland", "island", "israel", "italien", "jamaika", "japan", "jemen", "jordanien", "kambodscha", "kamerun", "kanada", "kap verde", "katar", "kenia", "kirgisistan", "kiribati", "kolumbien", "komoren", "kongo", "kosovo", "kroatien", "kuba", "kuwait", "laos", "lesotho", "lettland", "libanon", "liberia", "libyen", "liechtenstein", "litauen", "luxemburg", "madagaskar", "malawi", "malaysia", "malediven", "mali", "malta", "marokko", "marshallinseln", "mauretanien", "mauritius", "mexiko", "mikronesien", "moldawien", "monaco", "mongolei", "montenegro", "mosambik", "myanmar", "namibia", "nauru", "nepal", "neuseeland", "nicaragua", "niederlande", "niger", "nigeria", "norwegen", "oman", "österreich", "pakistan", "palau", "panama", "papua-neuguinea", "paraguay", "peru", "philippinen", "polen", "portugal", "ruanda", "rumänien", "russland", "salomonen", "sambia", "samoa", "san marino", "senegal", "serbien", "seychellen", "sierra leone", "simbabwe", "singapur", "slowakei", "slowenien", "somalia", "spanien", "sri lanka", "st. kitts und nevis", "st. lucia", "st. vincent und die grenadinen", "südafrika", "sudan", "südsudan", "suriname", "syrien", "tadschikistan", "taiwan", "tansania", "thailand", "togo", "tonga", "trinidad und tobago", "tschad", "tschechien", "tunesien", "türkei", "turkmenistan", "tuvalu", "uganda", "ukraine", "ungarn", "uruguay", "usbekistan", "vanuatu", "vatikanstadt", "venezuela", "vereinigte arabische emirate", "vereinigte staaten", "vietnam", "zentralafrikanische republik", "zypern"];
+    const chosenWord = countries[Math.floor(Math.random() * countries.length)];
+    let guessCount = 0;
+    let rowCounter = 1;
+    const inputRow = document.getElementById('input-row');
+    for (let i = 0; i < chosenWord.length; i++) {
+      const inputContainer = document.createElement('div');
+      inputContainer.classList.add('letter-input-container');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.classList.add('letter-input');
+      input.maxLength = 1;
+      input.autocomplete = 'off';
+      input.value = chosenWord[i] === ' ' ? '-' : ''; // Set value to '-' if it's a space
+      inputContainer.appendChild(input);
+      inputRow.appendChild(inputContainer);
+    }
+    function checkGuess(guess) {
+      let result = [];
+      for (let i = 0; i < chosenWord.length; i++) {
+        if (guess[i] === chosenWord[i]) {
+          result.push("correct");
+        } else if (chosenWord.includes(guess[i])) {
+          result.push("in-word");
+        } else {
+          result.push("incorrect");
         }
-    </script>
+      }
+      return result;
+    }
+    function updateInputColors(result, row) {
+      const inputs = row.querySelectorAll(".letter-input");
+      inputs.forEach((input, index) => {
+        input.classList.remove("correct", "in-word", "incorrect");
+        input.classList.add(result[index]);
+      });
+    }
+    function activateNextRow() {
+      if (rowCounter >= 5) {
+        alert("Sorry, you've run out of guesses. The country was: " + chosenWord.toUpperCase());
+        return;
+      }
+      const newRow = document.createElement('div');
+      newRow.classList.add('row');
+      newRow.id = `row-${rowCounter + 1}`;
+      rowCounter++;
+      for (let i = 0; i < chosenWord.length; i++) {
+        const inputContainer = document.createElement('div');
+        inputContainer.classList.add('letter-input-container');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.classList.add('letter-input');
+        input.maxLength = 1;
+        input.autocomplete = 'off';
+        input.value = chosenWord[i] === ' ' ? '-' : ''; // Set value to '-' if it's a space
+        inputContainer.appendChild(input);
+        newRow.appendChild(inputContainer);
+      }
+      inputRow.appendChild(newRow);
+      attachInputEvents(newRow.querySelectorAll('.letter-input'));
+      return newRow;
+    }
+    function submitGuess() {
+      if (guessCount >= 5) {
+        alert("Sorry, you've run out of guesses. The country was: " + chosenWord.toUpperCase());
+        return;
+      }
+      let guess = "";
+      const guessResult = [];
+      document.querySelectorAll(".letter-input").forEach((input, index) => {
+        const letter = input.value.toLowerCase();
+        guess += letter;
+        const correctness = checkGuess(letter)[0]; // Only checking the first letter since we're handling the first row
+        guessResult.push(correctness);
+        input.classList.remove("correct", "in-word", "incorrect");
+        input.classList.add(correctness);
+      });
+      guessCount++;
+      if (guessResult.every(result => result === "correct")) {
+        alert("Congratulations! You guessed the country: " + chosenWord.toUpperCase());
+        location.reload();
+      } else if (guessCount === 5) {
+        alert("Sorry, you've run out of guesses. The country was: " + chosenWord.toUpperCase());
+        location.reload();
+      } else {
+        const nextRow = activateNextRow();
+        if (nextRow) {
+          nextRow.querySelector('.letter-input').focus();
+        }
+      }
+    }
+    function handleInputEvents(input, index, inputs) {
+      input.addEventListener('input', function(event) {
+        const nextIndex = index + 1;
+        if (nextIndex < inputs.length) {
+          inputs[nextIndex].focus();
+        }
+      });
+      input.addEventListener('keydown', function(event) {
+        if (event.key === 'Backspace') {
+          event.preventDefault();
+          const prevIndex = index - 1;
+          if (prevIndex >= 0) {
+            inputs[prevIndex].focus();
+            inputs[prevIndex].value = ''; // Clear the value of the previous input
+          } else {
+            input.value = ''; // Clear the value of the current input if it's the first one
+          }
+        }
+      });
+    }
+    function attachInputEvents(inputs) {
+      inputs.forEach((input, index) => {
+        handleInputEvents(input, index, inputs);
+      });
+    }
+    document.getElementById("submit-button").addEventListener("click", submitGuess);
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        if (rowCounter <= 5) {
+          submitGuess();
+        } else {
+          alert("Sorry, you've run out of guesses. The country was: " + chosenWord.toUpperCase());
+        }
+        event.preventDefault(); // Prevent default behavior of Enter key
+      }
+    });
+    attachInputEvents(document.querySelectorAll('.letter-input'));
+  </script>
 </body>
-
 </html>
